@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FormSieve contact example</title>
+<form id="contact">
+  <label>Name <input name="name" required maxlength="100" autocomplete="name"></label>
+  <label>Email <input name="email" type="email" required maxlength="254" autocomplete="email"></label>
+  <label>Message <textarea name="message" required maxlength="4000"></textarea></label>
+  <div aria-hidden="true" style="position:absolute;left:-10000px">
+    <label>Leave empty <input name="website" tabindex="-1" autocomplete="off"></label>
+  </div>
+  <div id="challenge"></div>
+  <button disabled>Send</button>
+  <p id="status" role="status" aria-live="polite"></p>
+</form>
+<script>
+  // Replace with your public Worker URL and public Turnstile sitekey.
+  const endpoint = 'https://formsieve.YOUR-SUBDOMAIN.workers.dev/contact';
+  const sitekey = 'YOUR_TURNSTILE_SITEKEY';
+  const form = document.querySelector('#contact');
+  const button = form.querySelector('button');
+  const status = document.querySelector('#status');
+  let widget, busy = false, token = '';
+  window.onTurnstileReady = () => {
+    widget = turnstile.render('#challenge', {
+      sitekey, action: 'contact',
+      callback: value => { token = value; button.disabled = busy; },
+      'expired-callback': () => { token = ''; button.disabled = true; },
+      'error-callback': () => { token = ''; button.disabled = true; status.textContent = 'Verification unavailable. Please try again.'; },
+    });
+  };
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (busy || !token) return;
+    busy = true; button.disabled = true; status.textContent = 'Sending…';
+    try {
+      const values = Object.fromEntries(new FormData(form));
+      const response = await fetch(endpoint, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...values, verificationToken: token }),
+      });
+      if (response.ok) { status.textContent = 'Your message was sent.'; form.reset(); }
+      else if (response.status === 429) status.textContent = 'Too many attempts. Please wait a minute.';
+      else if (response.status === 409) status.textContent = 'This request was already processed or is pending. Please wait before trying again.';
+      else status.textContent = 'We could not send your message. Please check your details and try again.';
+    } catch { status.textContent = 'Connection interrupted. Delivery may have completed; please wait before retrying.'; }
+    finally {
+      busy = false; token = ''; button.disabled = true;
+      // Siteverify tokens are single-use, including after failed submissions.
+      turnstile.reset(widget);
+    }
+  });
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileReady&render=explicit" async defer></script>
+</html>

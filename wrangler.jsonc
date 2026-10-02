@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "formsieve",
+  "main": "examples/worker.js",
+  "compatibility_date": "2026-10-02",
+  "durable_objects": {
+    "bindings": [{ "name": "FORMSIEVE_STORE", "class_name": "FormSieveStore" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["FormSieveStore"] }],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  "vars": {
+    "MAIL_PROVIDER": "brevo",
+    "MAIL_FROM": "forms@example.com",
+    "MAIL_TO": "team@example.com",
+    "ALLOWED_ORIGINS": "[\"https://example.com\"]"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "formsieve",
+  "version": "0.1.0",
+  "description": "Provider-independent spam protection and email delivery for web forms",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./cloudflare": {
+      "types": "./src/cloudflare.d.ts",
+      "import": "./src/cloudflare.js"
+    },
+    "./durable-object": {
+      "types": "./src/durable-object.d.ts",
+      "import": "./src/durable-object.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
+    "test:brevo": "node scripts/test-brevo.mjs",
+    "check": "tsc --noEmit",
+    "prepublishOnly": "npm test && npm run check && npm run test:workers",
+    "dev": "wrangler dev",
+    "test:workers": "vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.3.6",
+    "@cloudflare/workers-types": "^5.20261002.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.147.0"
+  },
+  "keywords": [
+    "spam",
+    "forms",
+    "brevo",
+    "resend",
+    "postmark",
+    "workers"
+  ]
+}
